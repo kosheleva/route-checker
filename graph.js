@@ -8,8 +8,8 @@ class Graph {
     this.data.set(node, []);
   }
 
-  addEdge(node, edge) {
-    this.data.get(node).push(edge);
+  addEdge(node, edge, weight) {
+    this.data.get(node).push({ node: edge, weight });
   }
 
   getData() {

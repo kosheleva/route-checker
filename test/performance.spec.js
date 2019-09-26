@@ -13,7 +13,7 @@ const generateLocations = () => {
     locations[i] = {
       x: i,
       y: i,
-      to: [i+1],
+      to: [{ node: i + 1, weight: Math.round(Math.random() * 10) || 1 }],
     }
   }
 

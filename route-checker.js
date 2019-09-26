@@ -2,13 +2,14 @@
 import Graph from './graph';
 import { formatSystemNode, formatNmeaNode } from './utils';
 
+const DEFAULT_NMEA_WEIGTH = 1;
 class RouteChecker {
 
   /**
    * @param {Object} options
    * 
    * options = {
-   *   locations: { A: { x: 4945.6952, y: 03632.2096, to: ['B', 'C'] } }
+   *   locations: { A: { x: 4945.6952, y: 03632.2096, to: [{ node: 'B', weight: 10 }, { node: 'C', weight: 20 }] } }
    *   nmea: [
    *     '0GPGGA,061455.00,4945.6952,N,03632.2096,E,1,04,12.6,0.0,M,16.1,M,,*53',
    *   ]
@@ -81,8 +82,8 @@ class RouteChecker {
       systemRoute.addNode(node);
 
       locations[location].to.forEach(destination => {
-        if (locations[destination]) {
-          systemRoute.addEdge(node, formatSystemNode({ data: locations[destination] }));
+        if (locations[destination.node]) {
+          systemRoute.addEdge(node, formatSystemNode({ data: locations[destination.node] }), destination.weight);
         }
       });
     });
@@ -141,7 +142,7 @@ class RouteChecker {
       }
 
       const nextNode = rows[index + 1];
-      actualRoute.addEdge(formattedNode, formatNmeaNode({ row: nextNode, options: this.getOptions() }));
+      actualRoute.addEdge(formattedNode, formatNmeaNode({ row: nextNode, options: this.getOptions() }), DEFAULT_NMEA_WEIGTH);
     });
 
     return actualRoute;
@@ -159,7 +160,7 @@ class RouteChecker {
     let invalidRoutes = '';
 
     for (const [key, value] of systemLocations) {
-      if (JSON.stringify(value) !== JSON.stringify(actualLocations.get(key)) ) {
+      if (JSON.stringify((value || []).map(v => v.node)) !== JSON.stringify((actualLocations.get(key) || []).map(a => a.node)) ) {
         invalidRoutes += `${key};`;
       }
     }

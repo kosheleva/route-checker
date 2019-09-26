@@ -4,8 +4,8 @@ import RouteChecker from './../route-checker';
 
 const libOptions = {
   locations: { 
-    A: { x: '4945.6970', y: '03632.2106', to: ['B'] },
-    B: { x: '4945.7250', y: '03632.2400', to: ['C'] },
+    A: { x: '4945.6970', y: '03632.2106', to: [{ node: 'B', weight: 10 }] },
+    B: { x: '4945.7250', y: '03632.2400', to: [{ node: 'C', weight: 15 }] },
     C: { x: '4945.9000', y: '03632.5347', to: [] },
   },
   nmea: [
@@ -25,7 +25,7 @@ const expectedOpts = {
 const expectedSystemRoute = {
   '4945.6970:03632.2106': ['4945.7250:03632.2400'],
   '4945.7250:03632.2400': ['4945.9000:03632.5347'],
-  '4945.9000:03632.5347': []
+  '4945.9000:03632.5347': [],
 }
 
 describe("Route checker: ", () => {
@@ -52,26 +52,26 @@ describe("Route checker: ", () => {
 
     const systemRoute = lib.getSystemRoute();
     const actualRoute = lib.getActualRoute();
-    console.log(systemRoute);
+
     expect(lib).toBeInstanceOf(RouteChecker);
     expect(lib.getOptions()).toMatchObject(expectedOpts);
     expect(lib.systemRoute).toBeInstanceOf(Graph);
     expect(lib.actualRoute).toBeInstanceOf(Graph);
 
     expect(systemRoute.size).toBe(3);         
-    expect(systemRoute.get('4945.6970:03632.2106'))
+    expect(systemRoute.get('4945.6970:03632.2106').map(s => s.node))
       .toEqual(expect.arrayContaining(expectedSystemRoute['4945.6970:03632.2106']));
-    expect(systemRoute.get('4945.7250:03632.2400'))
+    expect(systemRoute.get('4945.7250:03632.2400').map(s => s.node))
       .toEqual(expect.arrayContaining(expectedSystemRoute['4945.7250:03632.2400']));
-    expect(systemRoute.get('4945.9000:03632.5347'))
+    expect(systemRoute.get('4945.9000:03632.5347').map(s => s.node))
       .toEqual(expect.arrayContaining(expectedSystemRoute['4945.9000:03632.5347']));
 
     expect(actualRoute.size).toBe(3);         
-    expect(actualRoute.get('4945.6970:03632.2106'))
+    expect(actualRoute.get('4945.6970:03632.2106').map(s => s.node))
       .toEqual(expect.arrayContaining(expectedSystemRoute['4945.6970:03632.2106']));
-    expect(actualRoute.get('4945.7250:03632.2400'))
+    expect(actualRoute.get('4945.7250:03632.2400').map(s => s.node))
       .toEqual(expect.arrayContaining(expectedSystemRoute['4945.7250:03632.2400']));
-    expect(actualRoute.get('4945.9000:03632.5347'))
+    expect(actualRoute.get('4945.9000:03632.5347').map(s => s.node))
       .toEqual(expect.arrayContaining(expectedSystemRoute['4945.9000:03632.5347']));
   })
 
