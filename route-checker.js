@@ -1,7 +1,9 @@
 
 import Graph from './graph';
+import { formatSystemNode, formatNmeaNode } from './utils';
 
 class RouteChecker {
+
   /**
    * @param {Object} options
    * 
@@ -10,46 +12,53 @@ class RouteChecker {
    *   nmea: [
    *     '0GPGGA,061455.00,4945.6952,N,03632.2096,E,1,04,12.6,0.0,M,16.1,M,,*53',
    *   ]
-   * 
    * }
    */
   constructor(options = {}) {
     const { locations = {}, nmea = []} = options;
 
-    this.options = this.initOptions();
-    this.systemRoute = this.setSystemRoute(locations);
-    this.actualRoute = this.setActualRoute(locations, nmea);
+    this.options = this._initOptions();
+    this.systemRoute = this._setSystemRoute(locations);
+    this.actualRoute = this._setActualRoute(nmea);
   }
 
-  initOptions() {
+  /**
+   * Define options
+   * 
+   * @returns {Object}
+   */
+  _initOptions() {
     return {
       nmeaXIndex: 2,
       nmeaYIndex: 4,
-      formattedNmeaXIndex: 3,
-      formattedNmeaYIndex: 5,
-      nodeCoordsIndex: 1,
-      nmeaNodeIndex: 0,
     }
   }
 
-  formatNode({ key, data }) {
-    return `${key}_${data.x}:${data.y}`;
+  /**
+   * Get options
+   * 
+   * @returns {Object}
+   */
+  getOptions() {
+    return this.options;
   }
 
-  toArray(row) {
-    return row.split(',');
-  }
-
+  /**
+   * Get system route data
+   * 
+   * @returns {Map}
+   */
   getSystemRoute() {
     return this.systemRoute.getData();
   }
 
+  /**
+   * Get actual route data
+   * 
+   * @returns {Map}
+   */
   getActualRoute() {
     return this.actualRoute.getData();
-  }
-
-  getOptions() {
-    return this.options; 
   }
 
   /**
@@ -59,7 +68,7 @@ class RouteChecker {
    * 
    * @returns {Graph}
    */
-  setSystemRoute(locations) {
+  _setSystemRoute(locations) {
     const locationsCount = Object.keys(locations).length;
     const systemRoute = new Graph(locationsCount);
 
@@ -68,11 +77,13 @@ class RouteChecker {
     }
 
     Object.keys(locations).forEach(location => {
-      const node = this.formatNode({ key: location, data: locations[location] });
+      const node = formatSystemNode({ data: locations[location] });
       systemRoute.addNode(node);
 
       locations[location].to.forEach(destination => {
-        systemRoute.addEdge(node, destination);
+        if (locations[destination]) {
+          systemRoute.addEdge(node, formatSystemNode({ data: locations[destination] }));
+        }
       });
     });
 
@@ -80,87 +91,67 @@ class RouteChecker {
   }
 
   /**
-   * Build route from nmea data
+   * Build system route
    * 
-   * @param {Object} locations
    * @param {Array} nmea
    * 
    * @returns {Graph}
    */
-  setActualRoute(locations, nmea) {
-    const filteredNmea = this.parseNmea(locations, nmea);
-    return this.buildNmeaRoute(filteredNmea);
+  _setActualRoute(nmea) {
+    const filteredNmea = this._parseNmea(nmea);
+    return this._buildNmeaRoute(filteredNmea);
   }
 
   /**
-   * Parse nmea data
+   * Filter nmea data set to leave only records which corresponds to system locations
    * 
-   * @param {Object} locations
    * @param {Array} nmea
    * 
-   * @returns {Array} array of nmea rows which match system locations
+   * @returns {Array}
    */
-  parseNmea(locations, nmea) {
-    return Object.keys(locations).map((location) => {
-      const node = locations[location];
-      const item = nmea.find((row) => {
-        return this.matchLocations(row, node);
-      });
+  _parseNmea(nmea) {
+    const systemRoute = this.systemRoute.getData();
 
-      if (item) {
-        return `${location}, ${item}`;
-      }
-    }).filter(item => item);
-  }
-
-  matchLocations(row, location) {
-    const { nmeaXIndex, nmeaYIndex, nodeCoordsIndex } = this.getOptions();
-    const rowAsArray = this.toArray(row);
-
-    const nmeaXY = `${rowAsArray[nmeaXIndex]}:${rowAsArray[nmeaYIndex]}`;
-    const locationXY = `${location.x}:${location.y}`;
-
-    return nmeaXY === locationXY;
+    return nmea.filter((row) => systemRoute.get(formatNmeaNode({ row, options: this.getOptions() })));
   }
 
   /**
-   * @param {Array} filteredNmea
+   * Build nmea route
+   * 
+   * @param {Array} rows
    * 
    * @returns Graph
    */
-  buildNmeaRoute(filteredNmea) {
-    const { nmeaNodeIndex, formattedNmeaXIndex, formattedNmeaYIndex } = this.getOptions();
-    const count = filteredNmea.length;
-
+  _buildNmeaRoute(rows) {
+    const count = rows.length;
     const actualRoute = new Graph(count);
 
     if (!count) {
       return actualRoute;
     }
 
-    filteredNmea.forEach((row, index) => {
-      const item = this.toArray(row);
-      const formattedNode = this.formatNode({
-        key: item[nmeaNodeIndex],
-        data: {
-          x: item[formattedNmeaXIndex],
-          y: item[formattedNmeaYIndex],
-        }
-      });
+    rows.forEach((row, index) => {
+      const isNoEdgeExist = count === 1 || index === count - 1;
+      const formattedNode = formatNmeaNode({ row, options: this.getOptions() });
       
-      if (count === 1 || index === count - 1) {
-        actualRoute.addNode(formattedNode);
-        return;
-      }
       actualRoute.addNode(formattedNode);
 
-      const nextNode = this.toArray(filteredNmea[index + 1])[nmeaNodeIndex];
-      actualRoute.addEdge(formattedNode, nextNode);
+      if (isNoEdgeExist) {
+        return row;
+      }
+
+      const nextNode = rows[index + 1];
+      actualRoute.addEdge(formattedNode, formatNmeaNode({ row: nextNode, options: this.getOptions() }));
     });
 
     return actualRoute;
   }
 
+  /**
+   * Checking if movement was by predefined system route
+   * 
+   * @returns {String} invalid routes
+   */
   compareRoutes() {
     const systemLocations = this.getSystemRoute();
     const actualLocations = this.getActualRoute();

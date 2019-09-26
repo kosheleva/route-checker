@@ -20,16 +20,12 @@ const libOptions = {
 const expectedOpts = {
   nmeaXIndex: 2,
   nmeaYIndex: 4,
-  formattedNmeaXIndex: 3,
-  formattedNmeaYIndex: 5,
-  nodeCoordsIndex: 1,
-  nmeaNodeIndex: 0,
 }
 
 const expectedSystemRoute = {
-  'A_4945.6970:03632.2106': ['B'],
-  'B_4945.7250:03632.2400': ['C'],
-  'C_4945.9000:03632.5347': []
+  '4945.6970:03632.2106': ['4945.7250:03632.2400'],
+  '4945.7250:03632.2400': ['4945.9000:03632.5347'],
+  '4945.9000:03632.5347': []
 }
 
 describe("Route checker: ", () => {
@@ -56,27 +52,27 @@ describe("Route checker: ", () => {
 
     const systemRoute = lib.getSystemRoute();
     const actualRoute = lib.getActualRoute();
-
+    console.log(systemRoute);
     expect(lib).toBeInstanceOf(RouteChecker);
     expect(lib.getOptions()).toMatchObject(expectedOpts);
     expect(lib.systemRoute).toBeInstanceOf(Graph);
     expect(lib.actualRoute).toBeInstanceOf(Graph);
 
     expect(systemRoute.size).toBe(3);         
-    expect(systemRoute.get('A_4945.6970:03632.2106'))
-      .toEqual(expect.arrayContaining(expectedSystemRoute['A_4945.6970:03632.2106']));
-    expect(systemRoute.get('B_4945.7250:03632.2400'))
-      .toEqual(expect.arrayContaining(expectedSystemRoute['B_4945.7250:03632.2400']));
-    expect(systemRoute.get('C_4945.9000:03632.5347'))
-      .toEqual(expect.arrayContaining(expectedSystemRoute['C_4945.9000:03632.5347']));
+    expect(systemRoute.get('4945.6970:03632.2106'))
+      .toEqual(expect.arrayContaining(expectedSystemRoute['4945.6970:03632.2106']));
+    expect(systemRoute.get('4945.7250:03632.2400'))
+      .toEqual(expect.arrayContaining(expectedSystemRoute['4945.7250:03632.2400']));
+    expect(systemRoute.get('4945.9000:03632.5347'))
+      .toEqual(expect.arrayContaining(expectedSystemRoute['4945.9000:03632.5347']));
 
     expect(actualRoute.size).toBe(3);         
-    expect(actualRoute.get('A_4945.6970:03632.2106'))
-      .toEqual(expect.arrayContaining(expectedSystemRoute['A_4945.6970:03632.2106']));
-    expect(actualRoute.get('B_4945.7250:03632.2400'))
-      .toEqual(expect.arrayContaining(expectedSystemRoute['B_4945.7250:03632.2400']));
-    expect(actualRoute.get('C_4945.9000:03632.5347'))
-      .toEqual(expect.arrayContaining(expectedSystemRoute['C_4945.9000:03632.5347']));
+    expect(actualRoute.get('4945.6970:03632.2106'))
+      .toEqual(expect.arrayContaining(expectedSystemRoute['4945.6970:03632.2106']));
+    expect(actualRoute.get('4945.7250:03632.2400'))
+      .toEqual(expect.arrayContaining(expectedSystemRoute['4945.7250:03632.2400']));
+    expect(actualRoute.get('4945.9000:03632.5347'))
+      .toEqual(expect.arrayContaining(expectedSystemRoute['4945.9000:03632.5347']));
   })
 
   it("should return empty result when comparing valid routes", () => {
@@ -94,7 +90,7 @@ describe("Route checker: ", () => {
     const lib = new RouteChecker({...libOptions, nmea});
     const result = lib.compareRoutes();
 
-    expect(result).toBe('A_4945.6970:03632.2106;B_4945.7250:03632.2400;');
+    expect(result).toBe('4945.6970:03632.2106;4945.7250:03632.2400;');
   })
 
 })
