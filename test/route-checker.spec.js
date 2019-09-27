@@ -1,6 +1,6 @@
 
-import Graph from './../graph';
-import RouteChecker from './../route-checker';
+import Graph from '../lib/graph';
+import RouteChecker from '../lib/route-checker';
 
 const libOptions = {
   locations: { 
@@ -91,6 +91,22 @@ describe("Route checker: ", () => {
     const result = lib.compareRoutes();
 
     expect(result).toBe('4945.6970:03632.2106;4945.7250:03632.2400;');
+  })
+
+  it("should return shortest path from A to C (A->D->C) for system route", () => {
+    const locations = { 
+      A: { x: '4945.6970', y: '03632.2106', to: [{ node: 'B', weight: 1 }, { node: 'D', weight: 2 }] },
+      B: { x: '4945.7250', y: '03632.2400', to: [{ node: 'C', weight: 8 }] },
+      C: { x: '4945.9000', y: '03632.5347', to: [] },
+      D: { x: '4946.2346', y: '03680.5298', to: [{ node: 'C', weight: 3 }] },
+    }
+    const lib = new RouteChecker({...libOptions, locations});
+    const result = lib.findSystemShortestPath('4945.6970:03632.2106', '4945.9000:03632.5347');
+
+    expect(result.toExist);
+    expect(result.path)
+      .toEqual(expect.arrayContaining(['4945.6970:03632.2106', '4946.2346:03680.5298', '4945.9000:03632.5347']));
+    expect(result.weight).toEqual(5);
   })
 
 })

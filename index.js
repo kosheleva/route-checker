@@ -1,4 +1,4 @@
 
-import RouteChecker from './route-checker';
+import RouteChecker from './lib/route-checker';
 
 module.exports = RouteChecker;

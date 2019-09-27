@@ -1,5 +1,5 @@
 
-import RouteChecker from './../route-checker';
+import RouteChecker from '../lib/route-checker';
 
 const initializationTimeLimit = 100; // ms
 
