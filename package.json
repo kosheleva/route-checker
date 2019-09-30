@@ -6,6 +6,10 @@
   "scripts": {
     "test": "node_modules/.bin/jest ./test/*.spec.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kosheleva/route-checker.git"
+  },
   "author": "",
   "license": "ISC",
   "devDependencies": {
